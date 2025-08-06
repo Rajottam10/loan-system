@@ -1,10 +1,12 @@
 package com.fl.fcs.services;
 
 import com.fl.fcs.dtos.AccountBalanceResponse;
+import com.fl.fcs.dtos.LoanApprovedEvent;
 import com.fl.fcs.dtos.LoanRequest;
 import com.fl.fcs.dtos.LoanResponse;
 import com.fl.fcs.kafkaconfigs.LoanEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 @Service
@@ -18,10 +20,9 @@ public class LoanDecisionService {
         this.loanEventPublisher = loanEventPublisher;
     }
 
-
+    @Transactional
     public LoanResponse evaluateLoanRequest(LoanRequest request) {
 
-        // Call core-banking-system to fetch balance
         AccountBalanceResponse balanceResponse = restClient.get()
                 .uri("/accounts/{customerId}/balance", request.getCustomerId())
                 .retrieve()
@@ -41,11 +42,11 @@ public class LoanDecisionService {
             response.setApprovedAmount(0);
             response.setMessage("Loan rejected due to insufficient balance");
         }
-        loanEventPublisher.publishLoanDecision(
-                request.getCustomerId(),
-                response.getStatus(),
-                response.getApprovedAmount()
-        );
+
+        if(response.getStatus()=="APPROVED") {
+            LoanApprovedEvent event = new LoanApprovedEvent(request.getCustomerId(), response.getMessage(), request.getRequestedAmount());
+            loanEventPublisher.publishLoanDecision(event);
+        }
         return response;
     }
 }

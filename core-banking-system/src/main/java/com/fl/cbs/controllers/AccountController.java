@@ -3,6 +3,7 @@ package com.fl.cbs.controllers;
 import com.fl.cbs.entities.Account;
 import com.fl.cbs.entities.AccountBalanceResponse;
 import com.fl.cbs.services.AccountService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,13 +21,13 @@ public class AccountController {
     }
 
     @GetMapping("/{customerId}/balance")
-    public AccountBalanceResponse getBalance(@PathVariable String customerId) {
+    public AccountBalanceResponse getCustomer(@PathVariable String customerId) {
         double balance = accountService.getBalanceByCustomerId(customerId);
         return new AccountBalanceResponse(balance);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Account> createAccount(@RequestBody Account account){
+    public ResponseEntity<Account> createAccount(@RequestBody @Valid Account account){
         return ResponseEntity.ok(accountService.createAccount(account));
     }
 }

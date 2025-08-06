@@ -22,4 +22,3 @@ public class LoanDecisionController {
         return loanDecisionService.evaluateLoanRequest(request);
     }
 }
-
